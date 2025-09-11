@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { FaPlus, FaEdit, FaEye, FaTrash, FaSortAlphaDown, FaSortNumericDown } from "react-icons/fa";
-import AlumniForm from "../../components/admin/AlumniForm";
-import AlumniDetails from "../../components/admin/AlumniDetails";
-import axios from "axios";
 
-const API = "https://sih-3k8l.onrender.com/api/alumni";
+import StudentForm from "../../components/admin/StudentForm";
+import StudentDetails from "../../components/admin/StudentDetails";
 
-export default function AlumniManagement() {
-  const [alumni, setAlumni] = useState([]);
+import { seedInitialIfEmpty, getAllStudents, addStudent, updateStudent, deleteStudent } from "../../utils/studentStorage";
+
+export default function Student_Management() {
+  const [students, setStudents] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [searchQ, setSearchQ] = useState("");
   const [filterBranch, setFilterBranch] = useState("");
@@ -18,75 +18,36 @@ export default function AlumniManagement() {
   const [showDetails, setShowDetails] = useState(false);
   const [detailItem, setDetailItem] = useState(null);
 
-  // Fetch all alumni
   useEffect(() => {
-    fetchAlumni();
+    (async () => {
+      await seedInitialIfEmpty();
+      const data = getAllStudents();
+      setStudents(data);
+      setFiltered(data);
+    })();
   }, []);
 
-  async function fetchAlumni() {
-    try {
-      const res = await axios.get(`${API}/all`);
-      const alumniArray = Array.isArray(res.data.data) ? res.data.data : [];
-      setAlumni(alumniArray);
-      setFiltered(alumniArray);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to fetch alumni");
-    }
-  }
-
-  // Filtering & Sorting
   useEffect(() => {
-    let list = [...alumni];
+    let list = [...students];
     if (searchQ) {
       const q = searchQ.toLowerCase();
-      list = list.filter(a =>
-        (a.name || "").toLowerCase().includes(q) ||
-        (a.email || "").toLowerCase().includes(q) ||
-        (a.company || "").toLowerCase().includes(q) ||
-        (a.userId || "").toLowerCase().includes(q)
-      );
+      list = list.filter(s => (s.name||"").toLowerCase().includes(q) || (s.email||"").toLowerCase().includes(q) || (s.userId||"").toLowerCase().includes(q));
     }
-    if (filterBranch) list = list.filter(a => a.branch === filterBranch);
-    if (filterYear) list = list.filter(a => String(a.graduationYear) === String(filterYear));
+    if (filterBranch) list = list.filter(s => s.branch === filterBranch);
+    if (filterYear) list = list.filter(s => String(s.admissionYear) === String(filterYear));
     if (sortBy) {
-      list.sort((x, y) => {
-        if (sortBy === "name") return String(x.name || "").localeCompare(y.name || "");
-        if (sortBy === "year") return Number(x.graduationYear || 0) - Number(y.graduationYear || 0);
+      list.sort((x,y) => {
+        if (sortBy === "name") return String(x.name||"").localeCompare(y.name||"");
+        if (sortBy === "year") return Number(x.admissionYear||0) - Number(y.admissionYear||0);
         return 0;
       });
     }
     setFiltered(list);
-  }, [searchQ, filterBranch, filterYear, sortBy, alumni]);
+  }, [searchQ, filterBranch, filterYear, sortBy, students]);
 
-  // CRUD Handlers
-  async function onSaveHandler(obj) {
-    try {
-      if (obj._id) {
-        await axios.put(`${API}/${obj.userId}`, obj); // use userId for update
-      } else {
-        await axios.post(`${API}/create-alumni`, obj); // use backend create route
-      }
-      setShowForm(false);
-      setFormInitial(null);
-      fetchAlumni();
-    } catch (err) {
-      console.error(err);
-      alert("Failed to save alumni");
-    }
-  }
-
-  async function handleDelete(userId) {
-    if (!window.confirm("Delete this alumnus? This action cannot be undone.")) return;
-    try {
-      await axios.delete(`${API}/${userId}`);
-      // remove from state instantly
-      setAlumni(prev => prev.filter(a => a.userId !== userId));
-      setFiltered(prev => prev.filter(a => a.userId !== userId));
-    } catch (err) {
-      console.error(err);
-      alert("Failed to delete alumni");
-    }
+  function refreshFromStorage() {
+    const data = getAllStudents();
+    setStudents(data);
   }
 
   function openAdd() {
@@ -99,16 +60,29 @@ export default function AlumniManagement() {
     setShowForm(true);
   }
 
+  function onSaveHandler(obj) {
+    if (getAllStudents().some(s => s.id === obj.id)) {
+      updateStudent(obj);
+    } else {
+      addStudent(obj);
+    }
+    refreshFromStorage();
+  }
+
+  function handleDelete(id) {
+    if (!window.confirm("Delete this student? This action cannot be undone.")) return;
+    deleteStudent(id);
+    refreshFromStorage();
+  }
+
   function openDetails(item) {
     setDetailItem(item);
     setShowDetails(true);
   }
 
-  // Options
-  const branchOptions = Array.from(new Set(alumni.map(a => a.branch).filter(Boolean)));
-  const yearOptions = Array.from(new Set(alumni.map(a => a.graduationYear).filter(Boolean))).sort((a, b) => b - a);
+  const branchOptions = Array.from(new Set(students.map(s => s.branch).filter(Boolean)));
+  const yearOptions = Array.from(new Set(students.map(s => s.admissionYear).filter(Boolean))).sort((a,b)=>b-a);
 
-  // Mask email & phone
   function maskEmail(email) {
     if (!email) return "";
     const [left, domain] = email.split("@");
@@ -128,32 +102,32 @@ export default function AlumniManagement() {
   return (
     <div style={{ padding: 18 }}>
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2 className="fw-bold">🎓 Alumni Management</h2>
+        <h2 className="fw-bold">🎓 Student Management</h2>
         <div>
           <button className="btn btn-outline-secondary me-2" onClick={() => setSortBy("name")}><FaSortAlphaDown /> Sort Name</button>
-          <button className="btn btn-outline-secondary me-2" onClick={() => setSortBy("year")}><FaSortNumericDown /> Sort Year</button>
-          <button className="btn btn-primary" onClick={openAdd}><FaPlus /> Add Alumni</button>
+          <button className="btn btn-outline-secondary me-2" onClick={() => setSortBy("year")}><FaSortNumericDown /> Sort Admission Year</button>
+          <button className="btn btn-primary" onClick={openAdd}><FaPlus /> Add Student</button>
         </div>
       </div>
 
       <div className="row g-2 mb-3">
         <div className="col-md-5">
-          <input className="form-control" placeholder="Search by name, email, company or userId" value={searchQ} onChange={e => setSearchQ(e.target.value)} />
+          <input className="form-control" placeholder="Search by name, email or userId" value={searchQ} onChange={e=>setSearchQ(e.target.value)} />
         </div>
         <div className="col-md-3">
-          <select className="form-select" value={filterBranch} onChange={e => setFilterBranch(e.target.value)}>
+          <select className="form-select" value={filterBranch} onChange={e=>setFilterBranch(e.target.value)}>
             <option value="">All Branches</option>
             {branchOptions.map(b => <option key={b} value={b}>{b}</option>)}
           </select>
         </div>
         <div className="col-md-2">
-          <select className="form-select" value={filterYear} onChange={e => setFilterYear(e.target.value)}>
+          <select className="form-select" value={filterYear} onChange={e=>setFilterYear(e.target.value)}>
             <option value="">All Years</option>
             {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>
         <div className="col-md-2 text-end">
-          <button className="btn btn-sm btn-outline-secondary" onClick={() => { setSearchQ(""); setFilterBranch(""); setFilterYear(""); setSortBy(""); }}>Reset</button>
+          <button className="btn btn-sm btn-outline-secondary" onClick={()=>{ setSearchQ(""); setFilterBranch(""); setFilterYear(""); setSortBy(""); }}>Reset</button>
         </div>
       </div>
 
@@ -162,44 +136,46 @@ export default function AlumniManagement() {
           <table className="table table-hover align-middle mb-0">
             <thead className="table-light">
               <tr>
-                <th style={{ minWidth: 200 }}>Name / UserID</th>
+                <th style={{minWidth:200}}>Name / UserID</th>
                 <th>Email</th>
                 <th>Phone</th>
                 <th>Branch</th>
-                <th>Year</th>
-                <th>Company</th>
-                <th className="text-center" style={{ minWidth: 180 }}>Actions</th>
+                <th>Admission Year</th>
+                <th>Interests</th>
+                <th className="text-center" style={{minWidth:180}}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={7} className="text-center py-4">No alumni found</td></tr>
-              ) : filtered.map(a => (
-                <tr key={a._id}>
+                <tr><td colSpan={7} className="text-center py-4">No students found</td></tr>
+              ) : filtered.map(s => (
+                <tr key={s.id}>
                   <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{display:'flex', alignItems:'center', gap:12}}>
                       <div style={{
-                        width: 48, height: 48, borderRadius: 8, background: '#f0f0f0',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700
+                        width:48, height:48, borderRadius:8, background:'#f0f0f0',
+                        display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700
                       }}>
-                        {a.profileImage ? <img src={a.profileImage} alt="avatar" style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 8 }} /> : (a.name || '').split(' ').map(n => n[0]).slice(0, 2).join('')}
+                        {s.profileImage ? <img src={s.profileImage} alt="avatar" style={{width:48,height:48,objectFit:'cover',borderRadius:8}} /> : (s.name||'').split(' ').map(n=>n[0]).slice(0,2).join('')}
                       </div>
                       <div>
-                        <div className="fw-semibold">{a.name}</div>
-                        <div style={{ fontSize: 12, color: '#666' }}>@{a.userId}</div>
+                        <div className="fw-semibold">{s.name}</div>
+                        <div style={{fontSize:12,color:'#666'}}>@{s.userId}</div>
                       </div>
                     </div>
                   </td>
-                  <td><div style={{ fontFamily: 'monospace' }}>{maskEmail(a.email)}</div></td>
-                  <td><div style={{ fontFamily: 'monospace' }}>{maskPhone(a.phone)}</div></td>
-                  <td>{a.branch}</td>
-                  <td>{a.graduationYear}</td>
-                  <td>{a.company}</td>
+
+                  <td><div style={{fontFamily:'monospace'}}>{maskEmail(s.email)}</div></td>
+                  <td><div style={{fontFamily:'monospace'}}>{maskPhone(s.phone)}</div></td>
+                  <td>{s.branch}</td>
+                  <td>{s.admissionYear}</td>
+                  <td>{(s.interests||[]).join(", ")}</td>
+
                   <td className="text-center">
                     <div className="d-flex justify-content-center gap-2">
-                      <button className="btn btn-sm btn-info" onClick={() => openDetails(a)}><FaEye /> View</button>
-                      <button className="btn btn-sm btn-warning" onClick={() => openEdit(a)}><FaEdit /> Edit</button>
-                      <button className="btn btn-sm btn-danger" onClick={() => handleDelete(a.userId)}><FaTrash /> Delete</button>
+                      <button className="btn btn-sm btn-info" onClick={()=>openDetails(s)}><FaEye /> View</button>
+                      <button className="btn btn-sm btn-warning" onClick={()=>openEdit(s)}><FaEdit /> Edit</button>
+                      <button className="btn btn-sm btn-danger" onClick={()=>handleDelete(s.id)}><FaTrash /> Delete</button>
                     </div>
                   </td>
                 </tr>
@@ -210,19 +186,19 @@ export default function AlumniManagement() {
       </div>
 
       {showForm && (
-        <AlumniForm
+        <StudentForm
           show={showForm}
           initialData={formInitial}
-          onClose={() => { setShowForm(false); setFormInitial(null); fetchAlumni(); }}
-          onSave={onSaveHandler}
+          onClose={()=>{ setShowForm(false); setFormInitial(null); refreshFromStorage(); }}
+          onSave={(obj)=>{ onSaveHandler(obj); }}
         />
       )}
 
       {showDetails && (
-        <AlumniDetails
+        <StudentDetails
           show={showDetails}
-          alumnus={detailItem}
-          onClose={() => { setShowDetails(false); setDetailItem(null); fetchAlumni(); }}
+          student={detailItem}
+          onClose={()=>{ setShowDetails(false); setDetailItem(null); refreshFromStorage(); }}
         />
       )}
     </div>
