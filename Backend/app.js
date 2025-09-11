@@ -30,7 +30,7 @@ try{
 app.set("view engine","ejs");
 app.set("views",path.join(__dirname,"view"));
 app.use(cors({
-  credentials:true,
+  credentials:false,
   origin: ["http://localhost:5173","http://localhost:5174","https://sih-1-ttr9.onrender.com/"],  
   methods:["GET","POST","PUT","DELETE"],
   allowedHeaders:["Content-Type","Authorization"]
