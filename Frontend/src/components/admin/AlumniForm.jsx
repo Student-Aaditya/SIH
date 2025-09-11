@@ -120,9 +120,7 @@ export default function AlumniForm({ show, onClose, onSave, initialData }) {
         alert("Alumni saved successfully!");
         onSave(toSave);
         onClose();
-      } else {
-        alert("Failed: " + result.error);
-      }
+      } 
     } catch (err) {
       console.error("Error creating alumni:", err);
       alert("Something went wrong!");
