@@ -87,46 +87,47 @@ export default function AlumniForm({ show, onClose, onSave, initialData }) {
   }
 
   async function handleSubmit() {
-  if (!form.name || !form.userId || !form.email) {
-    alert("Please fill Name, UserID and Email.");
-    return;
-  }
-
-  const toSave = { ...form };
-
-  if (form.passwordPlain && form.passwordPlain.trim()) {
-    toSave.passwordHash = await fileToHash(String(form.passwordPlain));
-  }
-  delete toSave.passwordPlain;
-
-  toSave.skills = skillsInput.split(",").map(s => s.trim()).filter(Boolean);
-  if (!toSave.id)
-    toSave.id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-try {
-  const res = await axios.post(
-    "https://alumini-back.onrender.com/user/create-alumini",
-    {
-      phone: form.phone,
-      username: form.name,
+    if (!form.name || !form.userId || !form.email) {
+      alert("Please fill Name, UserID and Email.");
+      return;
     }
-  );
 
-  const result = res.data; 
+    const toSave = { ...form };
 
-  if (result.success) {
-    alert("Alumni saved & SMS sent!");
-    onSave(toSave);
-    onClose();
-  } else {
-    alert("Failed: " + result.error);
+    // Hash password if provided
+    if (form.passwordPlain && form.passwordPlain.trim()) {
+      toSave.passwordHash = await fileToHash(String(form.passwordPlain));
+    }
+    delete toSave.passwordPlain;
+
+    // Convert skills string → array
+    toSave.skills = skillsInput.split(",").map(s => s.trim()).filter(Boolean);
+
+    // Generate ID if new
+    if (!toSave.id) {
+      toSave.id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    }
+
+    try {
+      const res = await axios.post(
+        "http://localhost:7023/api/alumni/create-alumni", // backend API route
+        toSave
+      );
+
+      const result = res.data;
+
+      if (result.success) {
+        alert("Alumni saved successfully!");
+        onSave(toSave);
+        onClose();
+      } else {
+        alert("Failed: " + result.error);
+      }
+    } catch (err) {
+      console.error("Error creating alumni:", err);
+      alert("Something went wrong!");
+    }
   }
-} catch (err) {
-  console.error("Error creating alumni:", err);
-  alert("Something went wrong!");
-}
-
-}
-
 
   return (
     <div style={overlayStyle}>

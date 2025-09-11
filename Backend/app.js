@@ -15,6 +15,10 @@ const morgan=require("morgan");
 const path=require("path");
 const cors=require("cors");
 const flash=require("express-flash");
+const alumniRoutes = require("./Routes/alumniRoutes.js");
+const studentRoutes=require("./Routes/studentRoutes.js");
+const eventRoutes = require("./Routes/eventRoutes.js");
+
 
 try{
     main()
@@ -83,6 +87,10 @@ app.get("/",(req,res)=>{
 })
 
 app.use("/",routes);
+app.use("/api/alumni", alumniRoutes);
+app.use("/students", studentRoutes);
+app.use("/events", eventRoutes);
+
 
 app.listen(port,(req,res)=>{
     console.log(`server working on ${port}`);

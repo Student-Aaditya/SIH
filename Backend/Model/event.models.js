@@ -6,42 +6,34 @@ const eventSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    description: {
-      type: String,
-    },
     date: {
-      type: Date,
+      type: String, // stored as "YYYY-MM-DD"
       required: true,
     },
-    startTime: {
-      type: String, 
+    time: {
+      type: String, // stored as "HH:mm"
       required: true,
     },
-    endTime: {
-      type: String, 
-      required: true,
+    duration: {
+      type: Number,
+      default: 1, // in hours
     },
-    targetAudience: {
-      type: String,
-      enum: ["student", "alumni"], 
-       required: true,
-    },
-    targetAlumni: {
-      type: String, 
-      default: "",
-    },
-    notifyStudents: {
+    notify: {
       type: Boolean,
       default: false,
     },
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    bannerImage: {
-      type: String, 
-    },
+    targetAlumni: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Alumni", // assuming you have Alumni model
+      },
+    ],
+    registered: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Student", // assuming you have Student model
+      },
+    ],
   },
   { timestamps: true }
 );
