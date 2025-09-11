@@ -21,33 +21,48 @@ const Login = () => {
     },
   });
 
-  const onSubmit = async (data) => {
-    try {
-      const res = await axios.post("https://sih-1-ttr9.onrender.com/user/login", {
-        email: data.email,
-        password: data.password,
-        role:data.role
-      });
-        const { role } = res.data.user;
+ const onSubmit = async (data) => {
+  try {
+    const res = await axios.post("https://sih-1-ttr9.onrender.com/user/login", {
+      email: data.email,
+      password: data.password,
+      role: data.role,
+    });
+
+    console.log("Login Response:", res.data);
+
+    const role = res.data?.role;
+
+    if (!role) {
+      alert("Invalid response from server. Please try again.");
+      return;
+    }
 
     if (role.toLowerCase() !== data.role.toLowerCase()) {
       alert("Role mismatch! Please select the correct role.");
       return;
     }
-      console.log(res.data);
 
-      if (data.role === "admin") {
-        navigate("/admin/Students");
-      } else if (data.role === "student") {
-        navigate("/student/My_Profile");
-      } else if (data.role === "alumini") {
-        navigate("/alumni/Professional_Details");
-      }
-    } catch (err) {
-      console.log(err.response?.data || err);
-      alert(err.response?.data?.msg || "Invalid login credentials");
+    if (res.data.token) {
+      localStorage.setItem("token", res.data.token);
     }
-  };
+    localStorage.setItem("role", role);
+    localStorage.setItem("email", res.data.email);
+
+    if (role === "admin") {
+      navigate("/admin/Students");
+    } else if (role === "student") {
+      navigate("/student/My_Profile");
+    } else if (role === "alumini") {
+      navigate("/alumni/Professional_Details");
+    }
+  } catch (err) {
+    console.log(err.response?.data || err);
+    alert(err.response?.data?.msg || "Invalid login credentials");
+  }
+};
+
+    
 
   return (
     <div className="d-flex justify-content-center align-items-center vh-100 bg-light"
