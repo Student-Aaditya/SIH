@@ -12,7 +12,7 @@ const Donations = () => {
     }
 
     try {
-      const response = await axios.post("http://127.0.0.1:7023/user/create", {
+      const response = await axios.post("https://sih-1-ttr9.onrender.com/user/create", {
         amount: donationAmount,
       });
 
@@ -29,7 +29,7 @@ const Donations = () => {
         handler: async function (response) {
           try {
             const verifyRes = await axios.post(
-              "http://127.0.0.1:7023/user/verify",
+              "https://sih-1-ttr9.onrender.com/user/verify",
               response
             );
             if (verifyRes.data.success) {

@@ -23,7 +23,7 @@ const Login = () => {
 
   const onSubmit = async (data) => {
     try {
-      const res = await axios.post("http://127.0.0.1:7023/user/login", {
+      const res = await axios.post("https://sih-1-ttr9.onrender.com/user/login", {
         email: data.email,
         password: data.password,
         role:data.role
