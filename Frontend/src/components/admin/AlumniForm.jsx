@@ -110,7 +110,7 @@ export default function AlumniForm({ show, onClose, onSave, initialData }) {
 
     try {
       const res = await axios.post(
-        "http://localhost:7023/api/alumni/create-alumni", // backend API route
+        "https://sih-3k8l.onrender.com/api/alumni/create-alumni", // backend API route
         toSave
       );
 

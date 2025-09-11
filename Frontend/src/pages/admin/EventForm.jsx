@@ -86,7 +86,7 @@ export default function EventForm({ onClose, onSave, alumniList = [], initialDat
 
     try {
       console.log("Sending event:", event);
-      const res = await axios.post("http://localhost:7023/events", event);
+      const res = await axios.post("https://sih-3k8l.onrender.com/events", event);
       console.log("Response:", res);
       if (res.status === 201) {
         alert("Event saved successfully!");

@@ -69,13 +69,13 @@ export default function StudentForm({ show, onClose, onSave, initialData }) {
         Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
     try {
-      const res = await axios.post("http://localhost:7023/students", toSave);
+      const res = await axios.post("https://sih-3k8l.onrender.com/students", toSave);
       if (res.data.success) {
-        alert("✅ Student saved successfully!");
+        alert(" Student saved successfully!");
         if (onSave) onSave(toSave);
         onClose();
       } else {
-        alert("❌ Failed to save student: " + res.data.error);
+        alert("Failed to save student: " + res.data.error);
       }
     } catch (err) {
       console.error("Error saving student:", err);
