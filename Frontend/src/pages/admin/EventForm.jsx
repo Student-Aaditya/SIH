@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import AlumniDetailsModal from "./AlumniDetailsModal";
 import axios from "axios";
 
-export default function EventForm({ onClose, onSave, alumniList = [], initialData }) {
+export default function EventForm({ onClose, onSave, initialData }) {
   const [title, setTitle] = useState("");
   const [dateTime, setDateTime] = useState("");
   const [duration, setDuration] = useState(1);
@@ -11,6 +11,30 @@ export default function EventForm({ onClose, onSave, alumniList = [], initialDat
   const [notifyStudents, setNotifyStudents] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortKey, setSortKey] = useState("name");
+  const [alumniList, setAlumniList] = useState([]);
+
+  useEffect(() => {
+  async function fetchAlumni() {
+    try {
+  const res = await axios.get("https://sih-3k8l.onrender.com/api/alumni/all");
+  console.log("API alumni response:", res.data);
+
+  // If backend sends an array directly
+  if (Array.isArray(res.data)) {
+    setAlumniList(res.data);
+  } else if (res.data.success) {
+    setAlumniList(res.data.alumni || []);
+  } else {
+    console.error("Failed to fetch alumni:", res.data.message);
+  }
+} catch (err) {
+  console.error("Error fetching alumni:", err);
+}
+
+  }
+  fetchAlumni();
+}, []);
+
 
   useEffect(() => {
     if (initialData) {
@@ -30,7 +54,7 @@ export default function EventForm({ onClose, onSave, alumniList = [], initialDat
       setSelectedAlumni([]);
       setNotifyStudents(false);
     }
-  }, [initialData, alumniList]);
+  }, [initialData]);
 
   // Ensure we use _id from MongoDB
   const alumniWithId = useMemo(
@@ -81,16 +105,14 @@ export default function EventForm({ onClose, onSave, alumniList = [], initialDat
       time: dateTime.split("T")[1] || "00:00",
       duration: Number(duration),
       notify: notifyStudents,
-      targetAlumni: selectedAlumni, // MongoDB ObjectId strings
+      targetAlumni: selectedAlumni, 
     };
 
     try {
-      console.log("Sending event:", event);
-      const res = await axios.post("https://sih-3k8l.onrender.com/events", event);
-      console.log("Response:", res);
-      if (res.status === 201) {
+      const res = await axios.post("https://sih-3k8l.onrender.com/events/", event);
+      if (res.data.success) {
         alert("Event saved successfully!");
-        if (onSave) onSave(res.data);
+        if (onSave) onSave(res.data.event);
         onClose();
       } else {
         alert("Failed to save event: " + res.data.message);
@@ -125,6 +147,7 @@ export default function EventForm({ onClose, onSave, alumniList = [], initialDat
       >
         <h5>{initialData ? "Edit Event" : "Add New Event"}</h5>
 
+        {/* Event Details */}
         <div className="mb-2">
           <label>Title</label>
           <input
@@ -155,6 +178,7 @@ export default function EventForm({ onClose, onSave, alumniList = [], initialDat
           />
         </div>
 
+        {/* Alumni Selection */}
         <div className="mb-2">
           <label>Search Alumni</label>
           <input
@@ -231,6 +255,7 @@ export default function EventForm({ onClose, onSave, alumniList = [], initialDat
           </label>
         </div>
 
+        {/* Actions */}
         <div className="d-flex justify-content-end mt-3">
           <button className="btn btn-secondary me-2" onClick={onClose}>
             Cancel
