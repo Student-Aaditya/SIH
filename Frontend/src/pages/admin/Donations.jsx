@@ -1,34 +1,38 @@
 import React, { useEffect, useState } from "react";
 import DonationForm from "./DonationForm";
 import AlumniDetailsModal from "./AlumniDetailsModal";
-import { getAllAlumni } from "../../utils/storage";
-import { fileToHash } from "../../utils/hash";
-
-const initialDonations = [
-  { id: "d1", userId:"aaditya001", amount:5000, date:"2024-01-05", transactionIdHash:"abcd1234" },
-  { id: "d2", userId:"aditya011", amount:3000, date:"2024-02-12", transactionIdHash:"efgh5678" },
-];
+import axios from "axios";
 
 export default function Donations({ navigateToAlumni }) {
-  const [donations, setDonations] = useState(initialDonations);
+  const [donations, setDonations] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [viewAlumni, setViewAlumni] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const alumniList = getAllAlumni();
-
-  const donationsWithAlumni = donations.map(d => {
-    const alum = alumniList.find(a => a.userId === d.userId);
-    return { ...d, ...alum };
-  });
-
-  const totalAmount = donations.reduce((sum, d) => sum + Number(d.amount || 0), 0);
+  // ✅ Fetch donations from backend
+  useEffect(() => {
+    async function fetchDonations() {
+      try {
+        const res = await axios.get("https://sih-3k8l.onrender.com/donations/all");
+        if (res.data.success) {
+          setDonations(res.data.data || []);
+        }
+      } catch (err) {
+        console.error("Error fetching donations:", err);
+        setDonations([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchDonations();
+  }, []);
 
   function handleAddDonation(newDonation) {
-    setDonations(prev => [...prev, newDonation]);
+    setDonations((prev) => [...prev, newDonation]);
   }
 
-  const filteredDonations = donationsWithAlumni
+ const filteredDonations = donationsWithAlumni
   .filter(d => {
     const term = searchTerm.toLowerCase();
     return (
@@ -42,16 +46,32 @@ export default function Donations({ navigateToAlumni }) {
   })
   .sort((a, b) => new Date(b.date) - new Date(a.date));
 
+  const totalAmount = donations.reduce(
+    (sum, d) => sum + Number(d.amount || 0),
+    0
+  );
+
+  if (loading) return <p>Loading donations...</p>;
 
   return (
     <div className="container mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h2 className="fw-bold">Donations</h2>
-        <button className="btn btn-primary" onClick={()=>setShowForm(true)}>Add Offline Donation</button>
+        <button
+          className="btn btn-primary"
+          onClick={() => setShowForm(true)}
+        >
+          Add Offline Donation
+        </button>
       </div>
 
       <div className="mb-3">
-        <input className="form-control" placeholder="Search by name, branch, year, email..." value={searchTerm} onChange={e=>setSearchTerm(e.target.value)} />
+        <input
+          className="form-control"
+          placeholder="Search by name, branch, year, email..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
       </div>
 
       <div className="mb-3">
@@ -73,17 +93,26 @@ export default function Donations({ navigateToAlumni }) {
             </tr>
           </thead>
           <tbody>
-            {filteredDonations.map(d => (
-              <tr key={d.id}>
-                <td>{d.name}</td>
-                <td>{d.userId}</td>
-                <td>{d.branch}</td>
-                <td>{d.graduationYear}</td>
+            {filteredDonations.map((d) => (
+              <tr key={d._id}>
+                <td>{d.alumni?.name || "N/A"}</td>
+                <td>{d.alumni?.userId || "N/A"}</td>
+                <td>{d.alumni?.branch || "N/A"}</td>
+                <td>{d.alumni?.graduationYear || "N/A"}</td>
                 <td>₹ {d.amount}</td>
-                <td>{d.date}</td>
-                <td><code style={{wordBreak:'break-all'}}>{d.transactionIdHash}</code></td>
+                <td>{new Date(d.date).toLocaleDateString()}</td>
                 <td>
-                  <button className="btn btn-sm btn-outline-info" onClick={()=>setViewAlumni(d)}>View Details</button>
+                  <code style={{ wordBreak: "break-all" }}>
+                    {d.transactionIdHash}
+                  </code>
+                </td>
+                <td>
+                  <button
+                    className="btn btn-sm btn-outline-info"
+                    onClick={() => setViewAlumni(d.alumni)}
+                  >
+                    View Details
+                  </button>
                 </td>
               </tr>
             ))}
@@ -91,17 +120,20 @@ export default function Donations({ navigateToAlumni }) {
         </table>
       </div>
 
-      {showForm && <DonationForm
-        alumniList={alumniList}
-        onClose={()=>setShowForm(false)}
-        onSave={handleAddDonation}
-      />}
+      {showForm && (
+        <DonationForm
+          onClose={() => setShowForm(false)}
+          onSave={handleAddDonation}
+        />
+      )}
 
-      {viewAlumni && <AlumniDetailsModal
-        alumni={viewAlumni}
-        onClose={()=>setViewAlumni(null)}
-        navigateToAlumni={navigateToAlumni}
-      />}
+      {viewAlumni && (
+        <AlumniDetailsModal
+          alumni={viewAlumni}
+          onClose={() => setViewAlumni(null)}
+          navigateToAlumni={navigateToAlumni}
+        />
+      )}
     </div>
   );
 }
