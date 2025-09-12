@@ -9,7 +9,6 @@ export default function DonationForm({ onClose, onSave }) {
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [loading, setLoading] = useState(false);
 
-  // ✅ Fetch alumni on mount
   useEffect(() => {
     async function fetchAlumni() {
       try {

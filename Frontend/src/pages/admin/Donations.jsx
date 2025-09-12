@@ -28,17 +28,20 @@ export default function Donations({ navigateToAlumni }) {
     setDonations(prev => [...prev, newDonation]);
   }
 
-  const filteredDonations = donationsWithAlumni.filter(d => {
+  const filteredDonations = donationsWithAlumni
+  .filter(d => {
     const term = searchTerm.toLowerCase();
     return (
-      d.name.toLowerCase().includes(term) ||
-      d.userId.toLowerCase().includes(term) ||
-      d.branch.toLowerCase().includes(term) ||
-      d.graduationYear.toString().includes(term) ||
-      (d.email && d.email.toLowerCase().includes(term)) ||
-      (d.phone && d.phone.includes(term))
+      String(d.name || "").toLowerCase().includes(term) ||
+      String(d.userId || "").toLowerCase().includes(term) ||
+      String(d.branch || "").toLowerCase().includes(term) ||
+      String(d.graduationYear || "").toLowerCase().includes(term) ||
+      String(d.email || "").toLowerCase().includes(term) ||
+      String(d.phone || "").toLowerCase().includes(term)
     );
-  }).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  })
+  .sort((a, b) => new Date(b.date) - new Date(a.date));
+
 
   return (
     <div className="container mt-4">
