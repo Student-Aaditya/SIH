@@ -1,5 +1,5 @@
 // /student/My_Profile.jsx
-import React from "react";
+import React, { useState } from "react";
 
 const profileData = {
   personal: {
@@ -26,6 +26,27 @@ const profileData = {
 };
 
 const My_Profile = () => {
+  const [interests, setInterests] = useState(profileData.interests);
+  const [newInterest, setNewInterest] = useState("");
+
+  const addInterest = () => {
+    const trimmed = newInterest.trim();
+    if (trimmed && !interests.includes(trimmed)) {
+      setInterests([...interests, trimmed]);
+      setNewInterest("");
+    }
+  };
+
+  const removeInterest = (interest) => {
+    setInterests(interests.filter((i) => i !== interest));
+  };
+
+  const handleSave = () => {
+    // In a real app, this would send the updated interests to the backend
+    console.log("Saved interests:", interests);
+    alert("Interests saved successfully!");
+  };
+
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#f5f7fa", padding: "3rem 1rem" }}>
       <div className="container col-12 col-md-10 mx-auto">
@@ -62,21 +83,6 @@ const My_Profile = () => {
               </p>
             </div>
           </div>
-
-          {/* Edit Profile Button */}
-          <button
-            style={{
-              backgroundColor: "#ff6584",
-              color: "#fff",
-              fontWeight: "600",
-              borderRadius: "50px",
-              padding: "0.6rem 1.8rem",
-              border: "none",
-              boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
-            }}
-          >
-            Edit Profile
-          </button>
         </div>
 
         {/* Personal Information */}
@@ -141,9 +147,10 @@ const My_Profile = () => {
             Interests
           </h4>
           <div className="d-flex flex-wrap gap-2 mb-3">
-            {profileData.interests.map((interest, idx) => (
+            {interests.map((interest, idx) => (
               <span
                 key={idx}
+                className="d-flex align-items-center"
                 style={{
                   backgroundColor: "#ff6584",
                   color: "#fff",
@@ -153,11 +160,31 @@ const My_Profile = () => {
                 }}
               >
                 {interest}
+                <button
+                  type="button"
+                  className="btn-close btn-close-white ms-2"
+                  aria-label="Remove"
+                  onClick={() => removeInterest(interest)}
+                  style={{ fontSize: "0.7rem" }}
+                />
               </span>
             ))}
           </div>
+          <div className="input-group mb-3" style={{ maxWidth: "400px" }}>
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Add new interest"
+              value={newInterest}
+              onChange={(e) => setNewInterest(e.target.value)}
+            />
+            <button className="btn btn-outline-secondary" type="button" onClick={addInterest}>
+              Add
+            </button>
+          </div>
           <div className="d-flex justify-content-end">
             <button
+              className="btn"
               style={{
                 backgroundColor: "#6c63ff",
                 color: "#fff",
@@ -166,6 +193,7 @@ const My_Profile = () => {
                 padding: "0.6rem 2rem",
                 border: "none",
               }}
+              onClick={handleSave}
             >
               Save Interests
             </button>
