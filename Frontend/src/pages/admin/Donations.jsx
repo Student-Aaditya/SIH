@@ -1,17 +1,29 @@
 import React, { useEffect, useState } from "react";
 import DonationForm from "./DonationForm";
 import AlumniDetailsModal from "./AlumniDetailsModal";
-import axios from "axios";
+import { getAllAlumni } from "../../utils/storage";
+import { fileToHash } from "../../utils/hash";
+
+const initialDonations = [
+  { id: "d1", userId:"aaditya001", amount:5000, date:"2024-01-05", transactionIdHash:"abcd1234" },
+  { id: "d2", userId:"aditya011", amount:3000, date:"2024-02-12", transactionIdHash:"efgh5678" },
+];
 
 export default function Donations({ navigateToAlumni }) {
-  const [donations, setDonations] = useState([]);
+  const [donations, setDonations] = useState(initialDonations);
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [viewAlumni, setViewAlumni] = useState(null);
-  const [loading, setLoading] = useState(true);
 
-  // ✅ Fetch donations from backend
-  useEffect(() => {
+  const alumniList = getAllAlumni();
+
+  const donationsWithAlumni = donations.map(d => {
+    const alum = alumniList.find(a => a.userId === d.userId);
+    return { ...d, ...alum };
+  });
+
+  const totalAmount = donations.reduce((sum, d) => sum + Number(d.amount || 0), 0);
+useEffect(() => {
     async function fetchDonations() {
       try {
         const res = await axios.get("https://sih-3k8l.onrender.com/donations/all");
@@ -29,10 +41,10 @@ export default function Donations({ navigateToAlumni }) {
   }, []);
 
   function handleAddDonation(newDonation) {
-    setDonations((prev) => [...prev, newDonation]);
+    setDonations(prev => [...prev, newDonation]);
   }
 
- const filteredDonations = donationsWithAlumni
+  const filteredDonations = donationsWithAlumni
   .filter(d => {
     const term = searchTerm.toLowerCase();
     return (
@@ -46,12 +58,6 @@ export default function Donations({ navigateToAlumni }) {
   })
   .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  const totalAmount = donations.reduce(
-    (sum, d) => sum + Number(d.amount || 0),
-    0
-  );
-
-  if (loading) return <p>Loading donations...</p>;
 
   return (
     <div className="container mt-4">
@@ -137,3 +143,4 @@ export default function Donations({ navigateToAlumni }) {
     </div>
   );
 }
+
