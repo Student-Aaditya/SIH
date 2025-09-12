@@ -1,15 +1,16 @@
 const Donation = require("../Model/donation.models.js");
 const Alumni = require("../Model/alumniData.js");
 
+// Create donation
 const createDonation = async (req, res) => {
   try {
     const { alumniId, amount, date, transactionIdHash } = req.body;
 
     const alumni = await Alumni.findById(alumniId);
-    if (!alumni) return res.status(404).json({ message: "Alumni not found" });
+    if (!alumni) return res.status(404).json({ success: false, message: "Alumni not found" });
 
     const donation = new Donation({
-      alumni: alumniId,
+      alumni: alumniId,   // must be Mongo _id
       amount,
       date,
       transactionIdHash,
@@ -25,11 +26,13 @@ const createDonation = async (req, res) => {
 // Get all donations
 const getDonations = async (req, res) => {
   try {
-    const donations = await Donation.find().populate("alumni", "name userId email branch amount graduationYear");
+    const donations = await Donation.find()
+      .populate("alumni", "name userId email branch graduationYear");
+
     res.json({ success: true, data: donations });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
-module.exports = { createDonation, getDonations }; 
+module.exports = { createDonation, getDonations };
