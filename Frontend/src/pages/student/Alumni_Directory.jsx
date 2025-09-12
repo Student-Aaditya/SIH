@@ -1,140 +1,208 @@
-// src/pages/student/Alumni_Directory.jsx
-import React from "react";
+import React, { useState, useContext } from "react";
+import { Button, Dropdown, Form, Modal, Badge } from "react-bootstrap";
+import { FaLinkedin } from "react-icons/fa";
+import MentorshipContext from "../../context/MentorshipContext";
 
 const alumniData = [
   {
     name: "Emily Harper",
     role: "Software Engineer at Tech Innovators Inc.",
     description: "Specializes in AI and Machine Learning",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuA__EdJkFkjqePFmczQnADyWqypc67coOrqBmuJRyHyZhR0YwpFMu_a1NM0yVPOrV7IKgS0o7BiLdYXrCXRDxDpdu7IThMpzykGg_2zgVRDFaqphSehJgqRCosGMAN79skefTKFl6OjW2yeR07lUmr8tO0mkrsWa30OCfBZkQ1EGo6x0zluzjgcnc0AJDMDaGB1XBaKKHxAINqLSqdav7abCx8sjlJlfcfA8_62QRmQlj2AiBu4arQ6eYSP1znjYkIJN9jpAUNOSqqH",
+    branch: "CSE",
+    year: 2020,
+    skills: ["AI", "ML", "Python"],
+    company: "Tech Innovators Inc.",
+    linkedin: "https://www.linkedin.com/in/emily-harper",
+    image: "https://randomuser.me/api/portraits/women/65.jpg",
   },
   {
     name: "Owen Turner",
     role: "Product Manager at Global Solutions Corp.",
-    description: "Experienced in Agile methodologies and product strategy",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuAsUNL-4UAm0Z5uv930YEjLWtMljGKvREnC9mJKkaTbHxRBriM-4j-C3PV2AAvlosmTn2Sz_3bxkVds57VS_e-p8KFSYyya19vzhgfkwwHT0xa7kGXLh4aJDxyJVDmnbvjHT4qW5zN7nGP4XlwSjxbdzYL-CS75r6cA9OOmO4qEmjuUdxJ5P_be11Iq4EwINi_g5y3Ou_K6Mn7JsbMfHRei6L6hUW7hMblLQEENz48Wrg6okMKqZ7wpqOs13MJPjFPKoB7iY5w67nK6",
+    description: "Experienced in Agile methodologies",
+    branch: "ECE",
+    year: 2019,
+    skills: ["Agile", "Management", "Strategy"],
+    company: "Global Solutions Corp.",
+    linkedin: "https://www.linkedin.com/in/owen-turner",
+    image: "https://randomuser.me/api/portraits/men/65.jpg",
   },
   {
-    name: "Chloe Mitchell",
-    role: "Marketing Director at Creative Marketing Agency",
-    description: "Expert in digital marketing and brand management",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBa_j8h7hL-E8IQdyGJBZFAYgBi_2Vj2sb5ahOy_6IQofS-ztF9KkjxnyIUmDkXAKT8I0QIbf9GF15Yn16v7TvBZJaeYxd0U5ErBeRhkEsYSGmcrE-3ftdCg1Ufa5pVPWS5U5xZzgUWQADBbipvbV1sm0ACQzQs57ktbG2wR6pFw0Gn2_5uK08VwiBOBXJ7FImn3QpzvFx5YscfocrX8xN9wW1GGeVjmf-RVyZDxJhzyGDW6KQGaG1ebK2fggPNNEMKq0bvBUGJFfrH",
-  },
-  {
-    name: "Noah Parker",
-    role: "Financial Analyst at Investment Group LLC",
-    description: "Focuses on investment analysis and portfolio management",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuAhAqqs-MaNLsT-NQ-4jq1rWVPZhaoAEbK5rbvymX-2JFdbGvzUruVAbjsDsGlcEXfTFIEATI64gtLzXCaBbOmnMomElWEhN1I0tyJLIEsm2b9PAkq9OJQ47Mn4VnkIoDpOvf5GscQGbVgr9Zkebqh3amts4_eo_98mnm7wNYnhQu2bqa46n2X_ukQ_lyuRlro-hRkmsezMsW_8qmgzhgiDJOYdAalVm49OtKxkPHMJqc8jpWTA0LsNAY0kQwDJ0dWbUnYf1fKAgjMa",
+    name: "Sophia Lee",
+    role: "UX Designer at Creative Studio",
+    description: "Passionate about user experience and interface design",
+    branch: "Design",
+    year: 2022,
+    skills: ["UX", "UI", "Figma"],
+    company: "Creative Studio",
+    linkedin: "https://www.linkedin.com/in/sophia-lee",
+    image: "https://randomuser.me/api/portraits/women/68.jpg",
   },
 ];
 
 const Alumni_Directory = () => {
+  const { requests, addRequest } = useContext(MentorshipContext);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState({ branch: "", year: "", skill: "", company: "" });
+  const [showFilter, setShowFilter] = useState(false);
+
+  const [selectedAlumni, setSelectedAlumni] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+
+  const uniqueBranches = [...new Set(alumniData.map((a) => a.branch))];
+  const uniqueYears = [...new Set(alumniData.map((a) => a.year))];
+  const uniqueSkills = [...new Set(alumniData.flatMap((a) => a.skills))];
+  const uniqueCompanies = [...new Set(alumniData.map((a) => a.company))];
+
+  const filteredAlumni = alumniData.filter((alumni) => {
+    const searchMatch =
+      alumni.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      alumni.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      alumni.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      alumni.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      alumni.skills.join(" ").toLowerCase().includes(searchTerm.toLowerCase());
+
+    const filterMatch =
+      (filters.branch ? alumni.branch === filters.branch : true) &&
+      (filters.year ? alumni.year === Number(filters.year) : true) &&
+      (filters.skill ? alumni.skills.includes(filters.skill) : true) &&
+      (filters.company ? alumni.company === filters.company : true);
+
+    return searchMatch && filterMatch;
+  });
+
+  const hasRequested = (alumni) => requests.some((r) => r.name === alumni.name);
+
+  const handleViewProfile = (alumni) => {
+    setSelectedAlumni(alumni);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedAlumni(null);
+    setShowModal(false);
+  };
+
   return (
     <div className="container py-5">
-      {/* Header */}
       <div className="text-center mb-5">
-        <h1 className="fw-bold mb-2" style={{ color: "#4b4bff" }}>
-          Alumni Directory
-        </h1>
+        <h1 className="fw-bold mb-2" style={{ color: "#4b4bff" }}>Alumni Directory</h1>
         <p className="text-muted">Connect with fellow alumni and expand your network</p>
       </div>
 
-      {/* Search & Filters */}
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-2">
         <input
           type="text"
           className="form-control flex-grow-1 shadow-sm"
           placeholder="Search by name, skills, or company"
           style={{ borderRadius: "50px" }}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <div className="d-flex flex-wrap gap-2 mt-2 mt-md-0">
-          {["Branch", "Year", "Skills", "Company"].map((filter) => (
-            <button
-              key={filter}
-              className="btn btn-outline-primary rounded-pill py-1 px-3 shadow-sm"
-            >
-              {filter} <i className="bi bi-caret-down-fill ms-1"></i>
-            </button>
-          ))}
-        </div>
+        <Dropdown show={showFilter} onToggle={() => setShowFilter(!showFilter)}>
+          <Dropdown.Toggle variant="outline-primary" className="rounded-pill px-4 py-2">
+            Filter
+          </Dropdown.Toggle>
+          <Dropdown.Menu style={{ minWidth: "250px", padding: "15px" }}>
+            <Form.Group className="mb-2">
+              <Form.Label>Branch</Form.Label>
+              <Form.Select value={filters.branch} onChange={(e) => setFilters({ ...filters, branch: e.target.value })}>
+                <option value="">All</option>
+                {uniqueBranches.map((b) => <option key={b} value={b}>{b}</option>)}
+              </Form.Select>
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>Year</Form.Label>
+              <Form.Select value={filters.year} onChange={(e) => setFilters({ ...filters, year: e.target.value })}>
+                <option value="">All</option>
+                {uniqueYears.map((y) => <option key={y} value={y}>{y}</option>)}
+              </Form.Select>
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>Skill</Form.Label>
+              <Form.Select value={filters.skill} onChange={(e) => setFilters({ ...filters, skill: e.target.value })}>
+                <option value="">All</option>
+                {uniqueSkills.map((s) => <option key={s} value={s}>{s}</option>)}
+              </Form.Select>
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>Company</Form.Label>
+              <Form.Select value={filters.company} onChange={(e) => setFilters({ ...filters, company: e.target.value })}>
+                <option value="">All</option>
+                {uniqueCompanies.map((c) => <option key={c} value={c}>{c}</option>)}
+              </Form.Select>
+            </Form.Group>
+          </Dropdown.Menu>
+        </Dropdown>
       </div>
 
-      {/* Alumni Cards */}
       <div className="row g-4">
-        {alumniData.map((alumni, index) => (
+        {filteredAlumni.map((alumni, index) => (
           <div className="col-12 col-md-6" key={index}>
-            <div
-              className="card h-100 shadow-sm rounded-4 overflow-hidden"
-              style={{
-                transition: "transform 0.3s, box-shadow 0.3s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-5px)";
-                e.currentTarget.style.boxShadow = "0 12px 25px rgba(0,0,0,0.15)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 4px 10px rgba(0,0,0,0.1)";
-              }}
-            >
+            <div className="card h-100 shadow-sm rounded-4 overflow-hidden">
               <div className="d-flex flex-column flex-md-row">
-                {/* Image */}
-                <div
-                  style={{
-                    backgroundImage: `url(${alumni.image})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                    minHeight: "180px",
-                    width: "100%",
-                    maxWidth: "180px",
-                  }}
-                  className="flex-shrink-0"
-                ></div>
-
-                {/* Info */}
+                <div style={{ backgroundImage: `url(${alumni.image})`, backgroundSize: "cover", backgroundPosition: "center", minHeight: "180px", width: "100%", maxWidth: "180px" }}></div>
                 <div className="p-3 d-flex flex-column justify-content-between flex-grow-1">
                   <div>
                     <h5 className="fw-bold mb-1">{alumni.name}</h5>
                     <p className="text-muted mb-1">{alumni.role}</p>
                     <p className="text-secondary small">{alumni.description}</p>
                   </div>
-                  <button
-                    className="btn mt-2 align-self-start rounded-pill px-4 py-1"
-                    style={{
-                      background: "linear-gradient(135deg, #6c63ff, #00c6ff)",
-                      color: "#fff",
-                      border: "none",
-                    }}
-                  >
-                    View Profile
-                  </button>
+                  <div className="d-flex gap-2 mt-2">
+                    <Button
+                      variant={hasRequested(alumni) ? "secondary" : "success"}
+                      disabled={hasRequested(alumni)}
+                      onClick={() => addRequest(alumni)}
+                    >
+                      {hasRequested(alumni) ? "Requested" : "Request Mentorship"}
+                    </Button>
+                    <Button variant="outline-primary" onClick={() => handleViewProfile(alumni)}>
+                      View Profile
+                    </Button>
+                    {alumni.linkedin && (
+                      <a href={alumni.linkedin} target="_blank" rel="noopener noreferrer" className="btn btn-outline-info d-flex align-items-center">
+                        <FaLinkedin />
+                      </a>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         ))}
+        {filteredAlumni.length === 0 && <div className="text-center text-muted mt-4">No alumni found</div>}
       </div>
 
-      {/* Pagination */}
-      <nav className="d-flex justify-content-center mt-4">
-        <ul className="pagination flex-wrap">
-          <li className="page-item">
-            <a className="page-link" href="#">&laquo;</a>
-          </li>
-          {[1, 2, 3, "...", 10].map((page, i) => (
-            <li key={i} className={`page-item ${page === 1 ? "active" : ""}`}>
-              <a className="page-link" href="#">{page}</a>
-            </li>
-          ))}
-          <li className="page-item">
-            <a className="page-link" href="#">&raquo;</a>
-          </li>
-        </ul>
-      </nav>
+      {/* Profile Modal */}
+      <Modal show={showModal} onHide={handleCloseModal} centered size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Alumni Profile</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedAlumni && (
+            <div className="d-flex flex-column flex-md-row gap-4">
+              <div style={{ flex: "0 0 150px" }}>
+                <img src={selectedAlumni.image} alt={selectedAlumni.name} className="img-fluid rounded" />
+              </div>
+              <div>
+                <h4>{selectedAlumni.name}</h4>
+                <p className="text-muted">{selectedAlumni.role}</p>
+                <p>{selectedAlumni.description}</p>
+                <p><strong>Branch:</strong> {selectedAlumni.branch}</p>
+                <p><strong>Year:</strong> {selectedAlumni.year}</p>
+                <p><strong>Company:</strong> {selectedAlumni.company}</p>
+                <p><strong>Skills:</strong> {selectedAlumni.skills.map((skill, i) => (
+                  <Badge bg="secondary" className="me-1" key={i}>{skill}</Badge>
+                ))}</p>
+                {selectedAlumni.linkedin && (
+                  <a href={selectedAlumni.linkedin} target="_blank" rel="noopener noreferrer" className="btn btn-outline-info">
+                    <FaLinkedin className="me-2" /> LinkedIn Profile
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
+        </Modal.Body>
+      </Modal>
     </div>
   );
 };
