@@ -3,8 +3,8 @@ import React from "react";
 export default function EventDetailsModal({ event, alumniList = [], onClose }) {
   if (!event) return null;
 
-  // Safely handle missing registered array
-  const registeredIds = event.registered || [];
+  // ✅ Safe fallback
+  const registeredIds = Array.isArray(event.registered) ? event.registered : [];
   const registeredAlumni = alumniList.filter(a => registeredIds.includes(a.userId));
 
   return (
@@ -24,7 +24,12 @@ export default function EventDetailsModal({ event, alumniList = [], onClose }) {
             registeredAlumni.map((a) => (
               <div
                 key={a.userId}
-                style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 6 }}
+                style={{
+                  display: "flex",
+                  gap: 10,
+                  alignItems: "center",
+                  marginBottom: 6,
+                }}
               >
                 {a.profileImage ? (
                   <img
