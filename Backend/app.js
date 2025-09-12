@@ -18,6 +18,7 @@ const flash=require("express-flash");
 const alumniRoutes = require("./Routes/alumniRoutes.js");
 const studentRoutes=require("./Routes/studentRoutes.js");
 const eventRoutes = require("./Routes/eventRoutes.js");
+const donationRoutes=require("./Routes/donationRoutes.js");
 
 
 try{
@@ -90,6 +91,7 @@ app.use("/",routes);
 app.use("/api/alumni", alumniRoutes);
 app.use("/students", studentRoutes);
 app.use("/events", eventRoutes);
+app.use("/donations", donationRoutes);
 
 
 app.listen(port,(req,res)=>{
