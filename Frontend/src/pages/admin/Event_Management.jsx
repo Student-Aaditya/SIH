@@ -15,7 +15,7 @@ export default function Event_Management() {
 
     async function fetchEvents() {
       try {
-        const res = await axios.get("https://sih-3k8l.onrender.com/events");
+        const res = await axios.get("https://sih-3k8l.onrender.com/events/");
         setEvents(res.data || []);
       } catch (err) {
         console.error("Error fetching events:", err);
