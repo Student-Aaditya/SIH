@@ -127,4 +127,4 @@ const modalStyle = {
   background: "white",
   padding: 20,
   borderRadius: 8,
-};x
+};
